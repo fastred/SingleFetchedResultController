@@ -63,12 +63,14 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
     }
 
     private func updateCurrentObjectFromNotification(notification: NSNotification, key: String) {
-        guard let modifiedObjects = notification.userInfo?[key] as? Set<NSManagedObject> else {
+        guard let allModifiedObjects = notification.userInfo?[key] as? Set<NSManagedObject> else {
             return
         }
 
-        let matchingObjects = NSSet(set: modifiedObjects)
+        let objectsWithCorrectType = Set(allModifiedObjects.filter { return $0 as? T != nil })
+        let matchingObjects = NSSet(set: objectsWithCorrectType)
             .filteredSetUsingPredicate(self.predicate) as? Set<NSManagedObject> ?? []
+
         assert(matchingObjects.count < 2)
 
         guard let matchingObject = matchingObjects.first as? T else {
