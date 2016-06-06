@@ -66,11 +66,11 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
         guard let modifiedObjects = notification.userInfo?[key] as? Set<NSManagedObject> else {
             return
         }
-        
-        let matchingObjects = (Array(modifiedObjects) as NSArray)
-            .filteredArrayUsingPredicate(self.predicate) as? [NSManagedObject] ?? []
+
+        let matchingObjects = NSSet(set: modifiedObjects)
+            .filteredSetUsingPredicate(self.predicate) as? Set<NSManagedObject> ?? []
         assert(matchingObjects.count < 2)
-        
+
         guard let matchingObject = matchingObjects.first as? T else {
             return
         }
@@ -78,7 +78,7 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
         object = matchingObject
         onChange(matchingObject, keyToChangeType(key))
     }
-    
+
     private func keyToChangeType(key: String) -> ChangeType {
         let map: [String : ChangeType] = [
             NSInsertedObjectsKey : .Insert,
