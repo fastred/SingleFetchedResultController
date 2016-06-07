@@ -6,8 +6,10 @@ Like NSFetchedResultsController but for a single object.
 ```swift
 class MyClass {
     var frc: SingleFetchedResultController<Profile>?
+    ...
     
     func setup() throws {
+        let predicate = NSPredicate(format: "username = %@", username)
         frc = SingleFetchedResultController(predicate: predicate,
                                             managedObjectContext: moc,
                                             onChange: { (profile, changeType) in
