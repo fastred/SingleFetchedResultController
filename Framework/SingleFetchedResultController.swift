@@ -1,8 +1,8 @@
 //
 //  SingleFetchedResultController.swift
-//  SingleObjectExample
+//  SingleFetchedResultController
 //
-//  Created by Arkadiusz Holko on 05/06/16.
+//  Created by Arkadiusz Holko on 07/06/16.
 //  Copyright © 2016 Arkadiusz Holko. All rights reserved.
 //
 
@@ -80,7 +80,7 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
         object = matchingObject
         onChange(matchingObject, keyToChangeType(key))
     }
-
+    
     private func keyToChangeType(key: String) -> ChangeType {
         let map: [String : ChangeType] = [
             NSInsertedObjectsKey : .Insert,
