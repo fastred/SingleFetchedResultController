@@ -1,5 +1,5 @@
 # SingleFetchedResultController
-Like NSFetchedResultsController but for a single object.
+Like NSFetchedResultsController but for a single managed object.
 
 ## Usage
 
