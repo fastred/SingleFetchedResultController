@@ -54,8 +54,6 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
         }
     }
 
-    private typealias Filter = (modifiedObjects: Set<NSManagedObject>) -> [NSManagedObject]
-
     @objc func objectsDidChange(notification: NSNotification) {
         updateCurrentObjectFromNotification(notification, key: NSInsertedObjectsKey)
         updateCurrentObjectFromNotification(notification, key: NSUpdatedObjectsKey)
