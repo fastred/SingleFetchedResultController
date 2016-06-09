@@ -1,5 +1,5 @@
 # SingleFetchedResultController
-Like NSFetchedResultsController but for a single managed object.
+Like NSFetchedResultsController but for a single managed object. Please see the [associated blogpost][blogpost].
 
 ## Usage
 
@@ -33,3 +33,4 @@ Arkadiusz Holko:
 * [@arekholko on Twitter](https://twitter.com/arekholko)
 * [Holko.pl](http://holko.pl/)
 
+[blogpost]: http://holko.pl/2016/06/07/single-object-core-data/
