@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name             = "SingleFRC"
-  spec.version          = "0.0.1"
+  spec.version          = "1.0"
   spec.summary          = "Like NSFetchedResultsController but for a single managed object."
   spec.homepage         = "https://github.com/fastred/SingleFetchedResultController"
   spec.license          = "MIT"
