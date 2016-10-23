@@ -14,60 +14,60 @@ public protocol EntityNameProviding {
 }
 
 public enum ChangeType {
-    case FirstFetch
-    case Insert
-    case Update
-    case Delete
+    case firstFetch
+    case insert
+    case update
+    case delete
 }
 
-public class SingleFetchedResultController<T: NSManagedObject where T: EntityNameProviding> {
+open class SingleFetchedResultController<T: NSManagedObject> where T: EntityNameProviding {
 
     public typealias OnChange = ((T, ChangeType) -> Void)
 
-    public let predicate: NSPredicate
-    public let managedObjectContext: NSManagedObjectContext
-    public let onChange: OnChange
-    public private(set) var object: T? = nil
+    open let predicate: NSPredicate
+    open let managedObjectContext: NSManagedObjectContext
+    open let onChange: OnChange
+    open fileprivate(set) var object: T? = nil
 
-    public init(predicate: NSPredicate, managedObjectContext: NSManagedObjectContext, onChange: OnChange) {
+    public init(predicate: NSPredicate, managedObjectContext: NSManagedObjectContext, onChange: @escaping OnChange) {
         self.predicate = predicate
         self.managedObjectContext = managedObjectContext
         self.onChange = onChange
 
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(objectsDidChange(_:)), name: NSManagedObjectContextObjectsDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(objectsDidChange(_:)), name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: nil)
     }
 
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+        NotificationCenter.default.removeObserver(self)
     }
 
-    public func performFetch() throws {
-        let fetchRequest = NSFetchRequest(entityName: T.entityName())
+    open func performFetch() throws {
+        let fetchRequest = NSFetchRequest<T>(entityName: T.entityName())
         fetchRequest.predicate = predicate
 
-        let results = try managedObjectContext.executeFetchRequest(fetchRequest)
+        let results = try managedObjectContext.fetch(fetchRequest)
         assert(results.count < 2) // we shouldn't have any duplicates
 
-        if let result = results.first as? T {
+        if let result = results.first {
             object = result
-            onChange(result, .FirstFetch)
+            onChange(result, .firstFetch)
         }
     }
 
-    @objc func objectsDidChange(notification: NSNotification) {
-        updateCurrentObjectFromNotification(notification, key: NSInsertedObjectsKey)
-        updateCurrentObjectFromNotification(notification, key: NSUpdatedObjectsKey)
-        updateCurrentObjectFromNotification(notification, key: NSDeletedObjectsKey)
+    @objc func objectsDidChange(_ notification: Notification) {
+        updateCurrentObject(notification: notification, key: NSInsertedObjectsKey)
+        updateCurrentObject(notification: notification, key: NSUpdatedObjectsKey)
+        updateCurrentObject(notification: notification, key: NSDeletedObjectsKey)
     }
 
-    private func updateCurrentObjectFromNotification(notification: NSNotification, key: String) {
-        guard let allModifiedObjects = notification.userInfo?[key] as? Set<NSManagedObject> else {
+    fileprivate func updateCurrentObject(notification: Notification, key: String) {
+        guard let allModifiedObjects = (notification as NSNotification).userInfo?[key] as? Set<NSManagedObject> else {
             return
         }
 
         let objectsWithCorrectType = Set(allModifiedObjects.filter { return $0 as? T != nil })
         let matchingObjects = NSSet(set: objectsWithCorrectType)
-            .filteredSetUsingPredicate(self.predicate) as? Set<NSManagedObject> ?? []
+            .filtered(using: self.predicate) as? Set<NSManagedObject> ?? []
 
         assert(matchingObjects.count < 2)
 
@@ -76,14 +76,14 @@ public class SingleFetchedResultController<T: NSManagedObject where T: EntityNam
         }
 
         object = matchingObject
-        onChange(matchingObject, keyToChangeType(key))
+        onChange(matchingObject, changeType(fromKey: key))
     }
     
-    private func keyToChangeType(key: String) -> ChangeType {
+    fileprivate func changeType(fromKey key: String) -> ChangeType {
         let map: [String : ChangeType] = [
-            NSInsertedObjectsKey : .Insert,
-            NSUpdatedObjectsKey : .Update,
-            NSDeletedObjectsKey : .Delete,
+            NSInsertedObjectsKey : .insert,
+            NSUpdatedObjectsKey : .update,
+            NSDeletedObjectsKey : .delete,
             ]
         return map[key]!
     }
