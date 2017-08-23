@@ -27,18 +27,23 @@ open class SingleFetchedResultController<T: NSManagedObject> where T: EntityName
     open let predicate: NSPredicate
     open let managedObjectContext: NSManagedObjectContext
     open let onChange: OnChange
-    open fileprivate(set) var object: T? = nil
+    open fileprivate(set) var object: T?
+    private var observer: Any?
 
     public init(predicate: NSPredicate, managedObjectContext: NSManagedObjectContext, onChange: @escaping OnChange) {
         self.predicate = predicate
         self.managedObjectContext = managedObjectContext
         self.onChange = onChange
 
-        NotificationCenter.default.addObserver(self, selector: #selector(objectsDidChange(_:)), name: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: nil)
+        observer = NotificationCenter.default.addObserver(forName: NSNotification.Name.NSManagedObjectContextObjectsDidChange, object: nil, queue: nil) { notification in
+            self.objectsDidChange(notification as NSNotification)
+        }
     }
 
     deinit {
-        NotificationCenter.default.removeObserver(self)
+        if let observer = self.observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     open func performFetch() throws {
@@ -54,13 +59,13 @@ open class SingleFetchedResultController<T: NSManagedObject> where T: EntityName
         }
     }
 
-    @objc func objectsDidChange(_ notification: Notification) {
+    func objectsDidChange(_ notification: NSNotification) {
         updateCurrentObject(notification: notification, key: NSInsertedObjectsKey)
         updateCurrentObject(notification: notification, key: NSUpdatedObjectsKey)
         updateCurrentObject(notification: notification, key: NSDeletedObjectsKey)
     }
 
-    fileprivate func updateCurrentObject(notification: Notification, key: String) {
+    fileprivate func updateCurrentObject(notification: NSNotification, key: String) {
         guard let allModifiedObjects = (notification as NSNotification).userInfo?[key] as? Set<NSManagedObject> else {
             return
         }
@@ -78,12 +83,12 @@ open class SingleFetchedResultController<T: NSManagedObject> where T: EntityName
         object = matchingObject
         onChange(matchingObject, changeType(fromKey: key))
     }
-    
+
     fileprivate func changeType(fromKey key: String) -> ChangeType {
         let map: [String : ChangeType] = [
-            NSInsertedObjectsKey : .insert,
-            NSUpdatedObjectsKey : .update,
-            NSDeletedObjectsKey : .delete,
+            NSInsertedObjectsKey: .insert,
+            NSUpdatedObjectsKey: .update,
+            NSDeletedObjectsKey: .delete,
             ]
         return map[key]!
     }
